@@ -25,6 +25,7 @@ import "strings"
 import "github.com/richmonkey/cfg"
 
 const DEFAULT_GROUP_DELIVER_COUNT = 4
+const DEFAULT_ROOM_MESSAGE_LIMIT = 200
 
 type Config struct {
 	port                int
@@ -55,6 +56,7 @@ type Config struct {
 
 	group_deliver_count int //群组消息投递并发数量,默认4
 	word_file           string //关键词字典文件
+	room_message_limit  int //单个room保存的消息数限制
 }
 
 func get_int(app_cfg map[string]string, key string) int {
@@ -81,6 +83,17 @@ func get_opt_int(app_cfg map[string]string, key string) int64 {
 	return n
 }
 
+func get_opt_int2(app_cfg map[string]string, key string, default_value int64) int64 {
+	concurrency, present := app_cfg[key]
+	if !present {
+		return default_value
+	}
+	n, err := strconv.ParseInt(concurrency, 10, 64)
+	if err != nil {
+		log.Fatalf("key:%s is't integer", key)
+	}
+	return n
+}
 
 func get_string(app_cfg map[string]string, key string) string {
 	concurrency, present := app_cfg[key]
@@ -172,5 +185,7 @@ func read_cfg(cfg_path string) *Config {
 	}
 
 	config.word_file = get_opt_string(app_cfg, "word_file")
+	config.room_message_limit = int(get_opt_int2(app_cfg, "room_message_limit", DEFAULT_ROOM_MESSAGE_LIMIT))
+	
 	return config
 }

@@ -115,6 +115,9 @@ func (client *RoomClient) HandleRoomIM(room_im *RoomMessage, seq int) {
 		return
 	}
 
+	deliver := GetRoomMessageDeliver(room_im.receiver)
+	deliver.SaveRoomMessage(room_im)
+	
 	m := &Message{cmd:MSG_ROOM_IM, body:room_im}
 	route := app_route.FindOrAddRoute(client.appid)
 	clients := route.FindRoomClientSet(room_id)

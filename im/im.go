@@ -61,6 +61,9 @@ var current_deliver_index uint64
 var group_message_delivers []*GroupMessageDeliver
 var filter *sensitive.Filter
 
+var room_message_delivers []*RoomMessageDeliver
+const ROOM_MESSAGE_DELIVER_COUNT = 128
+
 func init() {
 	app_route = NewAppRoute()
 	server_summary = NewServerSummary()
@@ -159,6 +162,11 @@ func GetGroupMessageDeliver(group_id int64) *GroupMessageDeliver {
 	deliver_index := atomic.AddUint64(&current_deliver_index, 1)
 	index := deliver_index%uint64(len(group_message_delivers))
 	return group_message_delivers[index]
+}
+
+func GetRoomMessageDeliver(room_id int64) *RoomMessageDeliver {
+	index := room_id%int64(len(room_message_delivers))
+	return room_message_delivers[index]
 }
 
 func SaveGroupMessage(appid int64, gid int64, device_id int64, msg *Message) (int64, error) {
@@ -447,6 +455,7 @@ func main() {
 	log.Infof("socket io address:%s tls_address:%s cert file:%s key file:%s",
 		config.socket_io_address, config.tls_address, config.cert_file, config.key_file)
 	log.Info("group deliver count:", config.group_deliver_count)
+	log.Info("room message limit:", config.room_message_limit)
 	
 	redis_pool = NewRedisPool(config.redis_address, config.redis_password, 
 		config.redis_db)
@@ -528,6 +537,14 @@ func main() {
 		deliver.Start()
 		group_message_delivers[i] = deliver
 	}
+
+	room_message_delivers = make([]*RoomMessageDeliver, ROOM_MESSAGE_DELIVER_COUNT)
+	for i := 0; i < ROOM_MESSAGE_DELIVER_COUNT; i++ {
+		d := NewRoomMessageDeliver()
+		d.Start()
+		room_message_delivers[i] = d
+
+	}	
 	
 	go ListenRedis()
 	go SyncKeyService()
