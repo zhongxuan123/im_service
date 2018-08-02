@@ -24,28 +24,33 @@ import log "github.com/golang/glog"
 import "github.com/gomodule/redigo/redis"
 
 
+type AppRoomMessage struct {
+	appid int64
+	*RoomMessage
+}
 
 type RoomMessageDeliver struct {
-	wt chan *RoomMessage
+	wt chan *AppRoomMessage
 }
 
 func NewRoomMessageDeliver() *RoomMessageDeliver {
 	usd := &RoomMessageDeliver{}
-	usd.wt = make(chan *RoomMessage, 10000)
+	usd.wt = make(chan *AppRoomMessage, 10000)
 	return usd
 }
 
-func (usd *RoomMessageDeliver) SaveRoomMessage(msg *RoomMessage) bool {
+func (usd *RoomMessageDeliver) SaveRoomMessage(appid int64, msg *RoomMessage) bool {
+	m := &AppRoomMessage{appid, msg}
 	select {
-	case usd.wt <- msg:
+	case usd.wt <- m:
 		return true
 	case <- time.After(60*time.Second):
-		log.Infof("save room message to wt timed out:%d, %d", msg.sender, msg.receiver)
+		log.Infof("save room message to wt timed out:%d, %d, %d", appid, msg.sender, msg.receiver)
 		return false
 	}
 }
 
-func (usd *RoomMessageDeliver) deliver(messages []*RoomMessage) {
+func (usd *RoomMessageDeliver) deliver(messages []*AppRoomMessage) {
 	conn := redis_pool.Get()
 	defer conn.Close()
 	
@@ -53,7 +58,7 @@ func (usd *RoomMessageDeliver) deliver(messages []*RoomMessage) {
 	conn.Send("MULTI")	
 	for _, msg := range(messages) {
 		content := fmt.Sprintf("%d\n%d\n%s", msg.sender, msg.receiver, msg.content)
-		queue_name := fmt.Sprintf("rooms_%d", msg.receiver)
+		queue_name := fmt.Sprintf("rooms_%d_%d", msg.appid, msg.receiver)
 		conn.Send("LPUSH", queue_name, content)
 	}
 	res, err := redis.Values(conn.Do("EXEC"))
@@ -67,7 +72,7 @@ func (usd *RoomMessageDeliver) deliver(messages []*RoomMessage) {
 	log.Infof("mmulti lpush:%d time:%s success", len(messages), duration)
 
 
-	rooms := make(map[int64]struct{})
+	rooms := make(map[string]struct{})
 	for index, v := range res {
 		count, ok := v.(int64)
 
@@ -85,7 +90,8 @@ func (usd *RoomMessageDeliver) deliver(messages []*RoomMessage) {
 			continue
 		}
 		msg := messages[index]
-		rooms[msg.receiver] = struct{}{}
+		queue_name := fmt.Sprintf("rooms_%d_%d", msg.appid, msg.receiver)
+		rooms[queue_name] = struct{}{}
 	}
 
 	if len(rooms) == 0 {
@@ -93,11 +99,9 @@ func (usd *RoomMessageDeliver) deliver(messages []*RoomMessage) {
 	}
 	
 	conn.Send("MULTI")
-	for room_id, _ := range rooms {
-		queue_name := fmt.Sprintf("rooms_%d", room_id)
+	for queue_name, _ := range rooms {
 		conn.Send("LTRIM", queue_name, 0, config.room_message_limit - 1)
 	}
-
 	_, err = conn.Do("EXEC")
 	if err != nil {
 		log.Warning("ltrim room list err:", err)
@@ -105,7 +109,7 @@ func (usd *RoomMessageDeliver) deliver(messages []*RoomMessage) {
 }
 
 func (usd *RoomMessageDeliver) run() {
-	messages := make([]*RoomMessage, 0, 10000)	
+	messages := make([]*AppRoomMessage, 0, 10000)	
 	for {
 		messages = messages[:0]
 		
