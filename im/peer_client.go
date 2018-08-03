@@ -133,6 +133,10 @@ func (client *PeerClient) HandleSyncKey(sync_key *SyncKey) {
 
 func (client *PeerClient) HandleIMMessage(message *Message) {
 	msg := message.body.(*IMMessage)
+
+	//存历史消息到redis
+	client.PublishSavePeerMsgQueue(msg)
+
 	seq := message.seq
 	if client.uid == 0 {
 		log.Warning("client has't been authenticated")

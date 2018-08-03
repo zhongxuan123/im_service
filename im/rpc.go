@@ -26,8 +26,63 @@ import "strconv"
 import "sync/atomic"
 import log "github.com/golang/glog"
 import "io/ioutil"
-import "github.com/bitly/go-simplejson"
+import (
+	"github.com/bitly/go-simplejson"
+	"github.com/zhongxuan123/helloGodTool/limitGo"
+)
 
+type BatchSystemMSG struct {
+	Uids []int64 `json:"uids"`
+	Msg  string  `json:"msg"`
+}
+func SendBatchSystemMessage(w http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		WriteHttpError(400, err.Error(), w)
+		return
+	}
+	m, _ := url.ParseQuery(req.URL.RawQuery)
+	appid, err := strconv.ParseInt(m.Get("appid"), 10, 64)
+	if err != nil {
+		log.Info("error:", err)
+		WriteHttpError(400, "invalid query param", w)
+		return
+	}
+	var bsm BatchSystemMSG
+	if err := json.Unmarshal(body, &bsm); err != nil {
+		log.Info("error:", err)
+		WriteHttpError(400, "invalid query param", w)
+		return
+	}
+	sys := &SystemMessage{bsm.Msg}
+	msg := &Message{cmd: MSG_SYSTEM, body: sys}
+	l := len(bsm.Uids)
+	if l <= 0 {
+		log.Info("error:", err)
+		WriteHttpError(400, "invalid query param", w)
+		return
+	}
+	lgo := limitGo.NewLimitGoroutine(100,true)
+	for i := 0; i < l; i++ {
+		lgo.LimitLock()
+		go func(j int) {
+			defer lgo.LimitUnlock()
+			uid := bsm.Uids[j]
+			msgid, err := SaveMessage(appid, uid, 0, msg)
+			if err != nil {
+				WriteHttpError(500, "internal server error", w)
+				return
+			}
+			//推送通知
+			PushMessage(appid, uid, msg)
+			//发送同步的通知消息
+			notify := &Message{cmd: MSG_SYNC_NOTIFY, body: &SyncKey{msgid}}
+			SendAppMessage(appid, uid, notify)
+		}(i)
+	}
+	lgo.WaitGo()
+	w.WriteHeader(200)
+}
 
 func SendGroupNotification(appid int64, gid int64, 
 	notification string, members IntSet) {

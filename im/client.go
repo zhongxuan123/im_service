@@ -22,8 +22,13 @@ package main
 import "net"
 import "time"
 import "sync/atomic"
-import log "github.com/golang/glog"
+import (
+	log "github.com/golang/glog"
+	"fmt"
+	"github.com/garyburd/redigo/redis"
+)
 import "container/list"
+
 
 type Client struct {
 	Connection//必须放在结构体首部
@@ -156,7 +161,7 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 	}
 
 	var err error
-	appid, uid, fb, on, err := client.AuthToken(login.token)
+	appid, uid, fb, _, err := client.AuthToken(login.token)
 	if err != nil {
 		log.Infof("auth token:%s err:%s", login.token, err)
 		msg := &Message{cmd: MSG_AUTH_STATUS, version:version, body: &AuthenticationStatus{1, 0}}
@@ -181,11 +186,26 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 	}
 
 	is_mobile := login.platform_id == PLATFORM_IOS || login.platform_id == PLATFORM_ANDROID
+	on := false
+
+	log.Info("is_mobile:",is_mobile)
+	log.Info("uid:",uid)
+	if  !is_mobile{
+		//查看redis的ontification_on
+		//推送开关  开/关
+		//ontification_on  0  ->   在线    ->  不推送
+		//ontification_on  1  ->   不在线 ->  推送
+		on = GetUserNotification(appid,uid)
+	}
+
 	online := true	
 	if on && !is_mobile {
 		online = false
 	}
-	
+	log.Info("on = ",on)
+	log.Info("online = ",online)
+
+
 	client.appid = appid
 	client.uid = uid
 	client.forbidden = int32(fb)
@@ -209,6 +229,21 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 	CountDAU(client.appid, client.uid)
 	atomic.AddInt64(&server_summary.nclients, 1)
 }
+
+func GetUserNotification(appid int64, uid int64) bool {
+	conn := redis_pool.Get()
+	defer conn.Close()
+	key := fmt.Sprintf("users_%d_%d", appid, uid)
+	log.Infof("GetUserNotification - key = %s",key)
+	on, err := redis.Bool(conn.Do("HGET", key, "notification_on"))
+	if err != nil && err != redis.ErrNil {
+		log.Info("hget error:", err)
+		return true
+	}
+	log.Infof("GetUserNotification - !on = %d",!on)
+	return !on
+}
+
 
 func (client *Client) AddClient() {
 	route := app_route.FindOrAddRoute(client.appid)

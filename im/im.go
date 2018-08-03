@@ -393,6 +393,8 @@ func StartHttpServer(addr string) {
 	http.HandleFunc("/get_offline_count", GetOfflineCount)
 	http.HandleFunc("/dequeue_message", DequeueMessage)
 
+	http.HandleFunc("/post_batch_system_message", SendBatchSystemMessage)
+
 	handler := loggingHandler{http.DefaultServeMux}
 	
 	err := http.ListenAndServe(addr, handler)

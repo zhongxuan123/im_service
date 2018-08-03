@@ -66,6 +66,11 @@ func (client *GroupClient) HandleGroupMessage(im *IMMessage, group *Group) {
 
 func (client *GroupClient) HandleGroupIMMessage(message *Message) {
 	msg := message.body.(*IMMessage)
+
+	//存历史消息到redis
+	client.PublishSaveGroupMsgQueue(msg)
+
+
 	seq := message.seq		
 	if client.uid == 0 {
 		log.Warning("client has't been authenticated")
