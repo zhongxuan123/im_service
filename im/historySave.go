@@ -14,7 +14,7 @@ func (client *GroupClient) PublishSaveGroupMsgQueue(im *IMMessage) {
 	v["content"] = im.content
 	v["timestamp"] = time.Now().Unix()
 	b, _ := json.Marshal(v)
-	var queue_name string = "save_group_msg_queue"
+	var queue_name string = "save_group_queue"
 	_, err := conn.Do("RPUSH", queue_name, b)
 	if err != nil {
 		log.Info("rpush error:", err)
@@ -30,7 +30,7 @@ func (client *PeerClient) PublishSavePeerMsgQueue(im *IMMessage) {
 	v["content"] = im.content
 	v["timestamp"] = time.Now().Unix()
 	b, _ := json.Marshal(v)
-	var queue_name string = "save_peer_msg_queue"
+	var queue_name string = "save_peer_queue"
 	_, err := conn.Do("RPUSH", queue_name, b)
 	if err != nil {
 		log.Info("rpush error:", err)
