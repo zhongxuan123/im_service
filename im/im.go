@@ -90,6 +90,7 @@ func Listen(f func(net.Conn), port int) {
 	for {
 		client, err := tcp_listener.AcceptTCP()
 		if err != nil {
+			log.Error("err:",err)
 			return
 		}
 		f(client)
@@ -394,6 +395,7 @@ func StartHttpServer(addr string) {
 	http.HandleFunc("/dequeue_message", DequeueMessage)
 
 	http.HandleFunc("/post_batch_system_message", SendBatchSystemMessage)
+	http.HandleFunc("/ping", HealthCheck)
 
 	handler := loggingHandler{http.DefaultServeMux}
 	

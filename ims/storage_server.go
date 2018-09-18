@@ -60,6 +60,7 @@ func Listen(f func(*net.TCPConn), listen_addr string) {
 	for {
 		client, err := tcp_listener.AcceptTCP()
 		if err != nil {
+			log.Error("err:",err)
 			return
 		}
 		f(client)

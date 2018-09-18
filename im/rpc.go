@@ -35,6 +35,11 @@ type BatchSystemMSG struct {
 	Uids []int64 `json:"uids"`
 	Msg  string  `json:"msg"`
 }
+
+
+func HealthCheck(w http.ResponseWriter, req *http.Request) {
+	w.WriteHeader(200)
+}
 func SendBatchSystemMessage(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
