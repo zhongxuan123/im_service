@@ -40,6 +40,7 @@ func (client *Client) PublishPeerMessage(appid int64, im *IMMessage) {
 	v["sender"] = im.sender
 	v["receiver"] = im.receiver
 	v["content"] = im.content
+	v["timestamp"] = nowtime
 
 	b, _ := json.Marshal(v)
 	var queue_name string
@@ -62,6 +63,7 @@ func (client *Client) PublishGroupMessage(appid int64, receivers []int64, im *IM
 	v["receivers"] = receivers
 	v["content"] = im.content
 	v["group_id"] = im.receiver
+	v["timestamp"] = nowtime
 
 	b, _ := json.Marshal(v)
 	var queue_name string
@@ -87,6 +89,7 @@ func (client *Client) PublishCustomerMessage(appid, receiver int64, cs *Customer
 	v["seller"] = cs.seller_id
 	v["store"] = cs.store_id
 	v["content"] = cs.content
+	v["timestamp"] = nowtime
 
 	b, _ := json.Marshal(v)
 	var queue_name string
@@ -104,6 +107,7 @@ func (client *Client) PublishSystemMessage(appid, receiver int64, content string
 	v["appid"] = appid
 	v["receiver"] = receiver
 	v["content"] = content
+	v["timestamp"] = nowtime
 
 	b, _ := json.Marshal(v)
 	var queue_name string

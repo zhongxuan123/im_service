@@ -27,13 +27,17 @@ import "time"
 import "net/http"
 import "math/rand"
 import log "github.com/golang/glog"
-import "github.com/gomodule/redigo/redis"
+import (
+	"github.com/gomodule/redigo/redis"
+	"sync/atomic"
+)
 
 var config *RouteConfig
 var clients ClientSet
 var mutex   sync.Mutex
 var redis_pool *redis.Pool
 var group_manager *GroupManager
+var nowtime int64
 
 func init() {
 	clients = NewClientSet()
@@ -208,7 +212,7 @@ func main() {
 
 	log.Infof("redis address:%s password:%s db:%d\n", 
 		config.redis_address, config.redis_password, config.redis_db)
-
+	go nowTimeUpdate()
 	redis_pool = NewRedisPool(config.redis_address, config.redis_password, 
 		config.redis_db)
 
@@ -219,4 +223,11 @@ func main() {
 		go StartHttpServer(config.http_listen_address)
 	}
 	ListenClient()
+}
+
+func nowTimeUpdate(){
+	for  {
+		atomic.StoreInt64(&nowtime,time.Now().Unix())
+		time.Sleep(300 *  time.Millisecond)
+	}
 }

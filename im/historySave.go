@@ -2,7 +2,6 @@ package main
 import "encoding/json"
 import (
 	log "github.com/golang/glog"
-	"time"
 )
 
 func (client *GroupClient) PublishSaveGroupMsgQueue(im *IMMessage) {
@@ -12,7 +11,7 @@ func (client *GroupClient) PublishSaveGroupMsgQueue(im *IMMessage) {
 	v["sender"] = im.sender
 	v["receiver"] = im.receiver
 	v["content"] = im.content
-	v["timestamp"] = time.Now().Unix()
+	v["timestamp"] = nowTime
 	b, _ := json.Marshal(v)
 	var queue_name string = "save_group_queue"
 	_, err := conn.Do("RPUSH", queue_name, b)
@@ -28,7 +27,7 @@ func (client *PeerClient) PublishSavePeerMsgQueue(im *IMMessage) {
 	v["sender"] = im.sender
 	v["receiver"] = im.receiver
 	v["content"] = im.content
-	v["timestamp"] = time.Now().Unix()
+	v["timestamp"] = nowTime
 	b, _ := json.Marshal(v)
 	var queue_name string = "save_peer_queue"
 	_, err := conn.Do("RPUSH", queue_name, b)

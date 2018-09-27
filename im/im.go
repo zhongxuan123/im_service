@@ -61,6 +61,8 @@ var current_deliver_index uint64
 var group_message_delivers []*GroupMessageDeliver
 var filter *sensitive.Filter
 
+var nowTime int64
+
 func init() {
 	app_route = NewAppRoute()
 	server_summary = NewServerSummary()
@@ -436,6 +438,7 @@ func main() {
 		return
 	}
 
+
 	config = read_cfg(flag.Args()[0])
 	log.Infof("port:%d\n", config.port)
 
@@ -451,7 +454,7 @@ func main() {
 	log.Infof("socket io address:%s tls_address:%s cert file:%s key file:%s",
 		config.socket_io_address, config.tls_address, config.cert_file, config.key_file)
 	log.Info("group deliver count:", config.group_deliver_count)
-	
+	go nowTimeUpdate()
 	redis_pool = NewRedisPool(config.redis_address, config.redis_password, 
 		config.redis_db)
 
@@ -541,6 +544,13 @@ func main() {
 
 	go StartSocketIO(config.socket_io_address, config.tls_address, 
 		config.cert_file, config.key_file)
-
 	ListenClient()
+}
+
+
+func nowTimeUpdate(){
+	for  {
+		atomic.StoreInt64(&nowTime,time.Now().Unix())
+		time.Sleep(300 *  time.Millisecond)
+	}
 }
