@@ -501,6 +501,7 @@ func main() {
 
 	route_channels = make([]*Channel, 0)
 	for _, addr := range(config.route_addrs) {
+		log.Info("addr:",addr)
 		channel := NewChannel(addr, DispatchAppMessage, DispatchGroupMessage, DispatchRoomMessage)
 		channel.Start()
 		route_channels = append(route_channels, channel)
@@ -509,6 +510,7 @@ func main() {
 	if len(config.group_route_addrs) > 0 {
 		group_route_channels = make([]*Channel, 0)
 		for _, addr := range(config.group_route_addrs) {
+			log.Info("addr:",addr)
 			channel := NewChannel(addr, DispatchAppMessage, DispatchGroupMessage, DispatchRoomMessage)
 			channel.Start()
 			group_route_channels = append(group_route_channels, channel)
