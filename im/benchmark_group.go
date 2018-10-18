@@ -34,7 +34,6 @@ func init() {
 	flag.IntVar(&count, "n", 5000, "request number")
 }
 
-
 func login(uid int64) (string, error) {
 	url := URL + "/auth/grant"
 	secret := fmt.Sprintf("%x", md5.Sum([]byte(APP_SECRET)))

@@ -486,13 +486,11 @@ func main() {
 				Addr: addr,
 			}
 			c.Start()
-
 			dispatcher := gorpc.NewDispatcher()
 			dispatcher.AddFunc("SyncMessage", SyncMessageInterface)
 			dispatcher.AddFunc("SyncGroupMessage", SyncGroupMessageInterface)
 			dispatcher.AddFunc("SavePeerMessage", SavePeerMessageInterface)
 			dispatcher.AddFunc("SaveGroupMessage", SaveGroupMessageInterface)
-
 			dc := dispatcher.NewFuncClient(c)
 
 			group_rpc_clients = append(group_rpc_clients, dc)

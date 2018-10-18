@@ -67,9 +67,6 @@ func (client *GroupClient) HandleGroupMessage(im *IMMessage, group *Group) {
 func (client *GroupClient) HandleGroupIMMessage(message *Message) {
 	msg := message.body.(*IMMessage)
 
-	//存历史消息到redis
-	client.PublishSaveGroupMsgQueue(msg)
-
 
 	seq := message.seq		
 	if client.uid == 0 {
@@ -84,7 +81,8 @@ func (client *GroupClient) HandleGroupIMMessage(message *Message) {
 	if message.flag & MESSAGE_FLAG_TEXT != 0 {
 		FilterDirtyWord(msg)
 	}
-	
+
+
 	msg.timestamp = int32(time.Now().Unix())
 
 	group := group_manager.FindGroup(msg.receiver)
@@ -97,6 +95,9 @@ func (client *GroupClient) HandleGroupIMMessage(message *Message) {
 		log.Warningf("sender:%d is not group member", msg.sender)
 		return
 	}
+	//存历史消息到redis
+	client.PublishSaveGroupMsgQueue(msg)
+
 	if group.super {
 		client.HandleSuperGroupMessage(msg)
 	} else {

@@ -155,6 +155,8 @@ func (client *Client) AuthToken(token string) (int64, int64, int, bool, error) {
 
 
 func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
+	log.Info("HandleAuthToken ...")
+
 	if client.uid > 0 {
 		log.Info("repeat login")
 		return

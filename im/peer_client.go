@@ -134,8 +134,6 @@ func (client *PeerClient) HandleSyncKey(sync_key *SyncKey) {
 func (client *PeerClient) HandleIMMessage(message *Message) {
 	msg := message.body.(*IMMessage)
 
-	//存历史消息到redis
-	client.PublishSavePeerMsgQueue(msg)
 
 	seq := message.seq
 	if client.uid == 0 {
@@ -158,6 +156,9 @@ func (client *PeerClient) HandleIMMessage(message *Message) {
 		log.Errorf("save peer message:%d %d err:", msg.sender, msg.receiver, err)
 		return
 	}
+
+	//存历史消息到redis
+	client.PublishSavePeerMsgQueue(msg)
 
 	//保存到自己的消息队列，这样用户的其它登陆点也能接受到自己发出的消息
 	msgid2, err := SaveMessage(client.appid, msg.sender, client.device_ID, m)

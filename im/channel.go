@@ -345,6 +345,7 @@ func (channel *Channel) Run() {
 	for {
 		conn, err := net.Dial("tcp", channel.addr)
 		if err != nil {
+			log.Info("channel.addr:",channel.addr)
 			log.Info("connect route server error:", err)
 			nsleep *= 2
 			if nsleep > 60*1000 {
