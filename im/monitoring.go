@@ -27,6 +27,7 @@ func Summary(rw http.ResponseWriter, req *http.Request) {
 	obj["client_count"] = server_summary.nclients
 	obj["in_message_count"] = server_summary.in_message_count
 	obj["out_message_count"] = server_summary.out_message_count
+	obj["time"] = nowTime
 
 	res, err := json.Marshal(obj)
 	if err != nil {
