@@ -62,7 +62,7 @@ func NewGroupMessageDeliver(root string) *GroupMessageDeliver {
 		log.Fatal("stat err:", err)
 	}
 
-	storage.wt = make(chan int64, 200)
+	storage.wt = make(chan int64, 10)
 	
 	storage.openWriteFile()
 	storage.openCursorFile()
