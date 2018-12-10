@@ -41,6 +41,7 @@ func HealthCheck(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(200)
 }
 func SendBatchSystemMessage(w http.ResponseWriter, req *http.Request) {
+	log.Info("SendBatchSystemMessage ... ")
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		WriteHttpError(400, err.Error(), w)
@@ -59,6 +60,7 @@ func SendBatchSystemMessage(w http.ResponseWriter, req *http.Request) {
 		WriteHttpError(400, "invalid query param", w)
 		return
 	}
+	log.Info("SystemMessage -- notification:",bsm.Msg)
 	sys := &SystemMessage{bsm.Msg}
 	msg := &Message{cmd: MSG_SYSTEM, body: sys}
 	l := len(bsm.Uids)
