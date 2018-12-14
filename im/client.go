@@ -220,22 +220,25 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 	msg := &Message{cmd: MSG_AUTH_STATUS, version: version, body: &AuthenticationStatus{0, client.public_ip}}
 	client.EnqueueMessage(msg)
 
-	//if !is_mobile {
-	//	//PC端连接,去通知所有客户端,显示PC端在线栏
-	//	content := fmt.Sprintf("{\"notification\":\"{\"pclogin_notify\":{\"uid\":%ld,\"login\":%t,\"timestamp\":%ld}\",\"appid\":%ld}",uid,true,nowTime,appid)
-	//	SendSystemMsg(content,uid,appid)
-	//	log.Info("pc hava online content:",content)
-	//} else {
-	//	//iOS或者安卓客户端连接,去查看是否有PC在线,并将状态通知所有客户端
-	//	islogin,err := have_PC_online(appid,uid)
-	//	if err != nil {
-	//		log.Error(err.Error())
-	//	}else {
-	//		content := fmt.Sprintf("{\"notification\":\"{\"pclogin_notify\":{\"uid\":%ld,\"login\":%t,\"timestamp\":%ld}\",\"appid\":%ld}",uid,islogin,nowTime,appid)
-	//		SendSystemMsg(content,uid,appid)
-	//		log.Info("pc hava online content:",content)
-	//	}
-	//}
+	if !is_mobile {
+		log.Info("iOS Android log----->")
+		//PC端连接,去通知所有客户端,显示PC端在线栏
+		content := fmt.Sprintf("{\"notification\":\"{\"pclogin_notify\":{\"uid\":%ld,\"login\":%t,\"timestamp\":%ld}\",\"appid\":%ld}",uid,true,nowTime,appid)
+		SendSystemMsg(content,uid,appid)
+		log.Info("pc hava online content:",content)
+	} else {
+		log.Info("pc log----->")
+		//iOS或者安卓客户端连接,去查看是否有PC在线,并将状态通知所有客户端
+		islogin,err := have_PC_online(appid,uid)
+		if err != nil {
+			log.Error(err.Error())
+		}else {
+
+			content := fmt.Sprintf("{\"notification\":\"{\"pclogin_notify\":{\"uid\":%ld,\"login\":%t,\"timestamp\":%ld}\",\"appid\":%ld}",uid,islogin,nowTime,appid)
+			SendSystemMsg(content,uid,appid)
+			log.Info("pc hava online content:",content)
+		}
+	}
 
 	client.AddClient()
 
