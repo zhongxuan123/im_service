@@ -228,7 +228,7 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 			log.Error(err.Error())
 		}else {
 
-			content := fmt.Sprintf("{\"notification\":\"{\\\"pclogin_notify\\\":{\\\"uid\\\":%d,\\\"login\\\":%t,\\\"timestamp\\\":%d}\",\"appid\":%d}",uid,islogin,nowTime,appid)
+			content := fmt.Sprintf("{\"notification\":\"{\\\"pclogin_notify\\\":{\\\"uid\\\":%d,\\\"login\\\":%t,\\\"timestamp\\\":%d}\",\"appid\":%d}}",uid,islogin,nowTime,appid)
 			SendSystemMsg(content,uid,appid)
 			log.Info("pc hava online content:",content)
 		}
