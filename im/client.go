@@ -223,7 +223,7 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 	if !is_mobile {
 		log.Info("iOS Android log----->")
 		//PC端连接,去通知所有客户端,显示PC端在线栏
-		content := fmt.Sprintf("{\"notification\":\"{\"pclogin_notify\":{\"uid\":%ld,\"login\":%t,\"timestamp\":%ld}\",\"appid\":%ld}",uid,true,nowTime,appid)
+		content := fmt.Sprintf("{\"notification\":\"{\"pclogin_notify\":{\"uid\":%d,\"login\":%t,\"timestamp\":%d}\",\"appid\":%d}",uid,true,nowTime,appid)
 		SendSystemMsg(content,uid,appid)
 		log.Info("pc hava online content:",content)
 	} else {
@@ -234,7 +234,7 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 			log.Error(err.Error())
 		}else {
 
-			content := fmt.Sprintf("{\"notification\":\"{\"pclogin_notify\":{\"uid\":%ld,\"login\":%t,\"timestamp\":%ld}\",\"appid\":%ld}",uid,islogin,nowTime,appid)
+			content := fmt.Sprintf("{\"notification\":\"{\"pclogin_notify\":{\"uid\":%d,\"login\":%t,\"timestamp\":%d}\",\"appid\":%d}",uid,islogin,nowTime,appid)
 			SendSystemMsg(content,uid,appid)
 			log.Info("pc hava online content:",content)
 		}
