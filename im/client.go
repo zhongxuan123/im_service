@@ -229,15 +229,16 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 	atomic.AddInt64(&server_summary.nclients, 1)
 
 	if is_mobile {
-		log.Info("iOS Android log----->")
 		//iOS或者安卓客户端连接,去查看是否有PC在线,并将状态通知所有客户端
 		islogin := have_PC_online(appid, uid)
 		content := fmt.Sprintf("{\"notification\":\"{\\\"pclogin_notify\\\":{\\\"uid\\\":%d,\\\"login\\\":%t,\\\"timestamp\\\":%d}}\",\"appid\":%d}", uid, islogin, nowTime, appid)
-		//SendSystemMsg(content,uid,appid)
-		sys := &SystemMessage{content}
-		msg := &Message{cmd: MSG_SYSTEM, body: sys}
-		client.EnqueueMessage(msg)
-		log.Info("pc hava online content:", content)
+		SendSystemMsg(content, uid, appid)
+		log.Info("iOS Android online content:", content)
+	} else {
+		islogin := true
+		content := fmt.Sprintf("{\"notification\":\"{\\\"pclogin_notify\\\":{\\\"uid\\\":%d,\\\"login\\\":%t,\\\"timestamp\\\":%d}}\",\"appid\":%d}", uid, islogin, nowTime, appid)
+		SendSystemMsg(content, uid, appid)
+		log.Info("PC online content:", content)
 	}
 }
 
