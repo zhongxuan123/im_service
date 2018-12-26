@@ -220,28 +220,6 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 	msg := &Message{cmd: MSG_AUTH_STATUS, version: version, body: &AuthenticationStatus{0, client.public_ip}}
 	client.EnqueueMessage(msg)
 
-	if is_mobile {
-		log.Info("iOS Android log----->")
-		//iOS或者安卓客户端连接,去查看是否有PC在线,并将状态通知所有客户端
-		islogin,err := have_PC_online(appid,uid)
-		if err != nil {
-			log.Error(err.Error())
-		}else {
-
-			content := fmt.Sprintf("{\"notification\":\"{\\\"pclogin_notify\\\":{\\\"uid\\\":%d,\\\"login\\\":%t,\\\"timestamp\\\":%d}}\",\"appid\":%d}",uid,islogin,nowTime,appid)
-			SendSystemMsg(content,uid,appid)
-			log.Info("pc hava online content:",content)
-		}
-
-	}
-	//else {
-	//log.Info("pc log----->")
-	////PC端连接,去通知所有客户端,显示PC端在线栏
-	//content := fmt.Sprintf("{\"notification\":\"{\\\"pclogin_notify\\\":{\\\"uid\\\":%d,\\\"login\\\":%t,\\\"timestamp\\\":%d}\",\"appid\":%d}",uid,true,nowTime,appid)
-	//SendSystemMsg(content,uid,appid)
-	//log.Info("pc hava online content:",content)
-	//}
-
 	client.AddClient()
 
 	client.PeerClient.Login()
@@ -249,21 +227,33 @@ func (client *Client) HandleAuthToken(login *AuthenticationToken, version int) {
 	CountDAU(client.appid, client.uid)
 
 	atomic.AddInt64(&server_summary.nclients, 1)
+
+	if is_mobile {
+		log.Info("iOS Android log----->")
+		//iOS或者安卓客户端连接,去查看是否有PC在线,并将状态通知所有客户端
+		islogin := have_PC_online(appid, uid)
+		content := fmt.Sprintf("{\"notification\":\"{\\\"pclogin_notify\\\":{\\\"uid\\\":%d,\\\"login\\\":%t,\\\"timestamp\\\":%d}}\",\"appid\":%d}", uid, islogin, nowTime, appid)
+		//SendSystemMsg(content,uid,appid)
+		sys := &SystemMessage{content}
+		msg := &Message{cmd: MSG_SYSTEM, body: sys}
+		client.EnqueueMessage(msg)
+		log.Info("pc hava online content:", content)
+	}
 }
 
-func have_PC_online(appid int64,uid int64) (bool,error) {
+func have_PC_online(appid int64, uid int64) bool {
 	route := app_route.FindRoute(appid)
 	if route == nil {
 		log.Warningf("can't find app route, appid:%d uid:%d", appid, uid)
-		return false,fmt.Errorf("can't find app route")
+		return false
 	}
 	clients := route.FindClientSet(uid)
 	for c, _ := range clients {
-		 if c.platform_id == PLATFORM_WEB {
-		 	return true,nil
-		 }
+		if c.platform_id == PLATFORM_WEB {
+			return true
+		}
 	}
-	return false,nil
+	return false
 }
 
 func SendSystemMsg(sysMsg string, uid int64, appid int64) {
